@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Survey • Client Intake</title>
+<style>
+body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;background:#f7f7f7}
+.wrap{max-width:900px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+h1{margin:0 0 10px} .note{margin:8px 0 14px;color:#444}
+fieldset{border:1px solid #eee;border-radius:10px;padding:14px;margin:12px 0}
+legend{font-weight:600}
+label{display:block;font-weight:600;margin:10px 0 6px}
+textarea{width:100%;min-height:70px;padding:10px;border:1px solid #ddd;border-radius:8px}
+button{margin-top:14px;padding:10px 14px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer}
+small{color:#666}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Survey</h1>
+  <div class="note">
+    Submission #{{ sub.id }} for code <b>{{ sub.code }}</b> — Status: <b>{{ sub.status }}</b>.
+  </div>
+
+  <form method="post">
+    <fieldset><legend>1. Personal Background & Daily Life</legend>
+      {% for i, label in [
+        (1,"What does a typical weekday look like for you from morning to night?"),
+        (2,"How do you usually spend your weekends?"),
+        (3,"How many hours a day do you spend at home versus outside?"),
+        (4,"Do you prefer a quiet, calm environment or a lively, energetic atmosphere?"),
+        (5,"Who do you usually spend most of your time with at home (alone, family, friends, pets)?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ answers.get('q' ~ i, '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>2. Emotional & Sensory Preferences</legend>
+      {% for i, label in [
+        (6,"Which three places in the world have made you feel happiest or most inspired?"),
+        (7,"Which three places have made you feel uncomfortable or unhappy?"),
+        (8,"What smells instantly make you feel relaxed?"),
+        (9,"What sounds do you find calming, and which do you dislike?"),
+        (10,"Do you enjoy the sight and smell of plants, flowers, and greenery around you?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ answers.get('q' ~ i, '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>3. Visual Style & Color</legend>
+      {% for i, label in [
+        (11,"What are your top three favorite colors?"),
+        (12,"Are there any colors you absolutely dislike or avoid?"),
+        (13,"Do you prefer light, airy spaces or dark, cozy ones?"),
+        (14,"When you imagine your dream home, is it modern, classic, rustic, bohemian, or something else?"),
+        (15,"Do you like symmetry and clean lines, or do you enjoy organic and irregular shapes?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ answers.get('q' ~ i, '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>4. Functional Lifestyle Needs</legend>
+      {% for i, label in [
+        (16,"Which room in your home do you use the most, and why?"),
+        (17,"Which room in your current home do you feel is “missing” or could be better designed?"),
+        (18,"How often do you cook at home?"),
+        (19,"Do you host guests often? If yes, what kind of gatherings?"),
+        (20,"Would you like to have a garden, terrace plants, or indoor greenery as part of your home?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ answers.get('q' ~ i, '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>5. Hobbies & Leisure</legend>
+      {% for i, label in [
+        (21,"What are your main hobbies or activities in your free time?"),
+        (22,"Do you prefer indoor or outdoor activities?"),
+        (23,"If you could add one leisure space to your home (library, art studio, home theater, garden, gym), what would it be?"),
+        (24,"Do you collect anything or have items that need special display or storage?"),
+        (25,"When traveling, do you choose destinations with a lot of natural scenery, parks, or green spaces?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ answers.get('q' ~ i, '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>6. Personality & Social Preferences</legend>
+      {% for i, label in [
+        (26,"Do you feel more energized by socializing or by spending time alone?"),
+        (27,"Are you more spontaneous or more of a planner?"),
+        (28,"Do you enjoy bold, statement-making spaces or subtle, timeless designs?"),
+        (29,"Do you feel more inspired in nature-rich environments or in urban/city settings?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ answers.get('q' ~ i, '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>7. Future Aspirations</legend>
+      <label for="q30">If money and space were no limit, what would your ideal home look and feel like — and how much of it would be surrounded by greenery or nature?</label>
+      <textarea id="q30" name="q30">{{ answers.get('q30','') }}</textarea>
+    </fieldset>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <p><small>After you press Submit, your answers are finalized.</small></p>
+</div>
+</body>
+</html>

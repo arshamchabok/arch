@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Founder • Codes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;background:#f7f7f7}
+    .wrap{max-width:860px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+    h1{margin:0 0 12px}
+    form{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 24px}
+    input[type="email"]{flex:1;min-width:260px;padding:10px;border:1px solid #ddd;border-radius:8px}
+    button{padding:10px 14px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    .badge{padding:4px 10px;border-radius:999px;font-size:12px}
+    .on{background:#e6ffed;color:#075e31;border:1px solid #b5e8c7}
+    .off{background:#fff0f0;color:#8a1f1f;border:1px solid #e7b5b5}
+    .row-actions form{display:inline}
+    .ok{background:#e6ffed;border:1px solid #b5e8c7;color:#075e31;padding:8px 10px;border-radius:8px;margin:8px 0;display:inline-block}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Founder • Codes</h1>
+    {% if ok %}<div class="ok">Code created.</div>{% endif %}
+
+    <h3>Create a new code</h3>
+    <form method="post" action="/founder/create?key={{ key|e }}">
+      <input type="email" name="architect_email" placeholder="Architect email" required>
+      <button type="submit">Create Code</button>
+    </form>
+
+    <h3>Existing codes</h3>
+    <table>
+      <thead>
+        <tr><th>Code</th><th>Architect Email</th><th>Status</th><th>Created</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in codes %}
+        <tr>
+          <td><strong>{{ c.code }}</strong></td>
+          <td>{{ c.architect_email }}</td>
+          <td>
+            {% if c.is_active %}
+              <span class="badge on">Active</span>
+            {% else %}
+              <span class="badge off">Inactive</span>
+            {% endif %}
+          </td>
+          <td>{{ c.created_at }}</td>
+          <td class="row-actions">
+            <form method="post" action="/founder/toggle/{{ c.code }}?key={{ key|e }}">
+              <button type="submit">{% if c.is_active %}Disable{% else %}Enable{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not codes %}
+        <tr><td colspan="5">No codes yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

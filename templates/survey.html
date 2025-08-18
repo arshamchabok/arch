@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Survey • Client Intake</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;background:#f7f7f7}
+  .wrap{max-width:900px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+  h1{margin:0 0 10px} .note{margin:8px 0 14px;color:#444}
+  fieldset{border:1px solid #eee;border-radius:10px;padding:14px;margin:12px 0}
+  legend{font-weight:600}
+  label{display:block;font-weight:600;margin:10px 0 6px}
+  textarea{width:100%;min-height:70px;padding:10px;border:1px solid #ddd;border-radius:8px}
+  button{margin-top:14px;padding:10px 14px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer}
+  small{color:#666}
+  /* uploads preview */
+  .preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin:10px 0}
+  .thumb{border:1px solid #eee;border-radius:8px;overflow:hidden;background:#fafafa}
+  .thumb img{display:block;width:100%;height:110px;object-fit:cover}
+  .thumb .name{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#333}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Survey</h1>
+  <div class="note">
+    Submission #{{ sub.id }} for code <b>{{ sub.code }}</b> — Status: <b>{{ sub.status }}</b>.
+  </div>
+
+  <!-- Main SURVEY form (answers only). We autosave to localStorage. -->
+  <form id="survey-form" method="post">
+    <fieldset><legend>1. Personal Background & Daily Life</legend>
+      {% for i, label in [
+        (1,"What does a typical weekday look like for you from morning to night?"),
+        (2,"How do you usually spend your weekends?"),
+        (3,"How many hours a day do you spend at home versus outside?"),
+        (4,"Do you prefer a quiet, calm environment or a lively, energetic atmosphere?"),
+        (5,"Who do you usually spend most of your time with at home (alone, family, friends, pets)?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ (answers.get('q' ~ i) if answers else '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>2. Emotional & Sensory Preferences</legend>
+      {% for i, label in [
+        (6,"Which three places in the world have made you feel happiest or most inspired?"),
+        (7,"Which three places have made you feel uncomfortable or unhappy?"),
+        (8,"What smells instantly make you feel relaxed?"),
+        (9,"What sounds do you find calming, and which do you dislike?"),
+        (10,"Do you enjoy the sight and smell of plants, flowers, and greenery around you?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ (answers.get('q' ~ i) if answers else '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>3. Visual Style & Color</legend>
+      {% for i, label in [
+        (11,"What are your top three favorite colors?"),
+        (12,"Are there any colors you absolutely dislike or avoid?"),
+        (13,"Do you prefer light, airy spaces or dark, cozy ones?"),
+        (14,"When you imagine your dream home, is it modern, classic, rustic, bohemian, or something else?"),
+        (15,"Do you like symmetry and clean lines, or do you enjoy organic and irregular shapes?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ (answers.get('q' ~ i) if answers else '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>4. Functional Lifestyle Needs</legend>
+      {% for i, label in [
+        (16,"Which room in your home do you use the most, and why?"),
+        (17,"Which room in your current home do you feel is “missing” or could be better designed?"),
+        (18,"How often do you cook at home?"),
+        (19,"Do you host guests often? If yes, what kind of gatherings?"),
+        (20,"Would you like to have a garden, terrace plants, or indoor greenery as part of your home?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ (answers.get('q' ~ i) if answers else '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>5. Hobbies & Leisure</legend>
+      {% for i, label in [
+        (21,"What are your main hobbies or activities in your free time?"),
+        (22,"Do you prefer indoor or outdoor activities?"),
+        (23,"If you could add one leisure space to your home (library, art studio, home theater, garden, gym), what would it be?"),
+        (24,"Do you collect anything or have items that need special display or storage?"),
+        (25,"When traveling, do you choose destinations with a lot of natural scenery, parks, or green spaces?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ (answers.get('q' ~ i) if answers else '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>6. Personality & Social Preferences</legend>
+      {% for i, label in [
+        (26,"Do you feel more energized by socializing or by spending time alone?"),
+        (27,"Are you more spontaneous or more of a planner?"),
+        (28,"Do you enjoy bold, statement-making spaces or subtle, timeless designs?"),
+        (29,"Do you feel more inspired in nature-rich environments or in urban/city settings?"),
+      ] %}
+        <label for="q{{i}}">{{label}}</label>
+        <textarea id="q{{i}}" name="q{{i}}">{{ (answers.get('q' ~ i) if answers else '') }}</textarea>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset><legend>7. Future Aspirations</legend>
+      <label for="q30">If money and space were no limit, what would your ideal home look and feel like — and how much of it would be surrounded by greenery or nature?</label>
+      <textarea id="q30" name="q30">{{ (answers.get('q30') if answers else '') }}</textarea>
+    </fieldset>
+
+    <button type="submit">Submit Answers</button>
+    <p><small>After you press Submit, your answers are sent to the architect.</small></p>
+  </form>
+
+  <!-- AFTER the 30 questions: Photo upload (separate form) -->
+  <fieldset style="margin-top:18px">
+    <legend>Upload Inspiration Photos (max 10)</legend>
+
+    <!-- Live preview BEFORE upload -->
+    <div id="preview" class="preview" aria-live="polite"></div>
+
+    <form id="uploadForm" method="post" action="/client/{{ sub.id }}/upload" enctype="multipart/form-data">
+      <input id="fileInput" type="file" name="files" multiple accept="image/jpeg,image/png,image/webp">
+      <button type="submit">Upload</button>
+    </form>
+
+    {% if photos %}
+      <div class="preview" style="margin-top:12px">
+        {% for p in photos %}
+          <div class="thumb">
+            <img src="/{{ p.file_path }}" alt="photo">
+            <div class="name" title="{{ p.file_path }}">{{ p.file_path.split('/')[-1] }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="note">No photos uploaded yet.</p>
+    {% endif %}
+  </fieldset>
+
+  <p><small>Tip: You can upload photos first (answers are autosaved), then submit answers.</small></p>
+</div>
+
+<script>
+  // ---------- Keep answers safe even if page refreshes ----------
+  const SUB_ID = "{{ sub.id }}";
+  const DRAFT_KEY = "survey-draft-" + SUB_ID;
+
+  function restoreDraft(){
+    try {
+      const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}");
+      for (let i=1; i<=30; i++){
+        const el = document.querySelector(`[name="q${i}"]`);
+        if (el && typeof saved["q"+i] === "string") el.value = saved["q"+i];
+      }
+    } catch(_) {}
+  }
+
+  function saveDraft(){
+    const data = {};
+    for (let i=1; i<=30; i++){
+      const el = document.querySelector(`[name="q${i}"]`);
+      if (el) data["q"+i] = el.value || "";
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    restoreDraft();
+    document.getElementById("survey-form").addEventListener("input", saveDraft);
+    // Clear draft only when answers are submitted (not on photo upload)
+    document.getElementById("survey-form").addEventListener("submit", () => {
+      localStorage.removeItem(DRAFT_KEY);
+    });
+  });
+
+  // ---------- Show thumbnails for selected photos BEFORE upload ----------
+  const fileInput = document.getElementById('fileInput');
+  const preview = document.getElementById('preview');
+
+  fileInput?.addEventListener('change', () => {
+    preview.innerHTML = '';
+    const files = Array.from(fileInput.files || []).slice(0, 10); // cap at 10
+    files.forEach(file => {
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.innerHTML = `<img src="${e.target.result}" alt=""><div class="name" title="${file.name}">${file.name}</div>`;
+        preview.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+</body>
+</html>

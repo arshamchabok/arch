@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Start • Client Intake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;background:#f7f7f7}
+.wrap{max-width:720px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+label{display:block;margin:10px 0 6px} input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+button{margin-top:14px;padding:10px 14px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer}
+.err{background:#ffffff;color:#911212;border:1px solid #e7b5b5;padding:10px;border-radius:8px;margin-bottom:12px}
+</style></head>
+<body><div class="wrap">
+  <h1>Client Intake</h1>
+  <p>Enter the code you received and your details.</p>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post" action="/start">
+    <label>Code</label><input name="code" placeholder="e.g., F3992ED6" required>
+    <label>First name</label><input name="first_name" required>
+    <label>Last name</label><input name="last_name" required>
+    <label>Email</label><input name="email" type="email" required>
+    <label>Date of birth</label><input name="dob" type="date" required>
+    <button type="submit">Continue</button>
+  </form>
+</div></body></html>
