@@ -1,7 +1,32 @@
+# Virtual env, caches, OS junk
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.DS_Store
+Thumbs.db
+
+# Editors/IDE
+.vscode/
+.idea/
+
+# Local databases & backups
 app.db
+app_backup.db
+*.sqlite
+*.sqlite3
+
+# Env/secrets
 .env
+.env.*
+
+# Logs & coverage (optional)
+logs/
+*.log
+.pytest_cache/
+.coverage
+
+# Uploads (keep the placeholder)
 static/uploads/*
 !static/uploads/.gitkeep

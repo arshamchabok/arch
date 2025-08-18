@@ -10,6 +10,12 @@ from dotenv import load_dotenv
 import os, json, shutil, smtplib
 from email.message import EmailMessage
 from email.utils import formatdate
+import sys
+
+def log(msg: str):
+    # goes to Render logs
+    print(msg, file=sys.stdout, flush=True)
+
 
 load_dotenv()
 
@@ -187,16 +193,17 @@ async def survey_submit(sub_id: int, request: Request, session: Session = Depend
         session.add(sub)
         session.commit()
 
-        # try to email (don’t break user flow if it fails)
+        emailed = False
         try:
-            send_submission_email(sub.id, session)
-        except Exception:
-            pass
+            emailed = send_submission_email(sub.id, session)
+        except Exception as mail_err:
+            emailed = False
 
         tpl = templates.get_template("survey_thanks.html")
-        return tpl.render(request=request, sub=sub)
+        return tpl.render(request=request, sub=sub, emailed=emailed)
     except Exception as e:
         return HTMLResponse(f"<pre>ERROR: {type(e).__name__}: {e}</pre>", status_code=500)
+
 
 @app.post("/client/{sub_id}/upload", response_class=HTMLResponse)
 async def upload_photos(
@@ -262,25 +269,29 @@ def delete_photo(sub_id: int, photo_id: int, session: Session = Depends(get_sess
     session.commit()
     return RedirectResponse(url=f"/client/{sub_id}/survey", status_code=303)
 
-# ---------- Email helper ----------
-def send_submission_email(submission_id: int, session: Session):
+def send_submission_email(submission_id: int, session: Session) -> bool:
     from models import Submission, Photo, Code
     sub = session.get(Submission, submission_id)
     if not sub:
-        return
+        log(f"[MAIL] Submission {submission_id} not found.")
+        return False
 
     code_row = session.exec(select(Code).where(Code.code == sub.code)).first()
     if not code_row:
-        return
+        log(f"[MAIL] No architect email found for code {sub.code}.")
+        return False
     to_email = code_row.architect_email
 
+    # answers
     answers = {}
     if getattr(sub, "answers_json", None):
         try:
             answers = json.loads(sub.answers_json)
-        except Exception:
+        except Exception as e:
+            log(f"[MAIL] answers_json parse error for submission {sub.id}: {e}")
             answers = {}
 
+    # HTML body (show full questions)
     lines = []
     lines.append(f"<h2>New Client Submission (#{sub.id})</h2>")
     lines.append(f"<p><b>Code:</b> {sub.code}</p>")
@@ -288,13 +299,12 @@ def send_submission_email(submission_id: int, session: Session):
     lines.append("<hr>")
     lines.append("<h3>Answers</h3>")
     lines.append("<ol>")
-    # Use full question text instead of Q1/Q2 labels
-    for i in range(1, 31):
-        q_text = QUESTIONS[i-1] if i-1 < len(QUESTIONS) else f"Question {i}"
-        val = (answers.get(f"q{i}", "") or "").replace('\n', '<br>')
-        lines.append(f"<li><div style='margin-bottom:10px'><b>{q_text}</b><br>{val}</div></li>")
+    for i, qtext in enumerate(QUESTIONS, start=1):
+        val = (answers.get(f"q{i}", "") or "").replace("\n", "<br>")
+        lines.append(f"<li><div style='margin-bottom:8px'><b>{qtext}</b><br>{val}</div></li>")
     lines.append("</ol>")
 
+    # photos list
     photos = session.exec(select(Photo).where(Photo.submission_id == sub.id)).all()
     if photos:
         lines.append("<h3>Photos</h3><ul>")
@@ -304,9 +314,6 @@ def send_submission_email(submission_id: int, session: Session):
 
     html = "\n".join(lines)
 
-    if not (SMTP_HOST and SMTP_PORT and SMTP_USER and SMTP_PASS and FROM_EMAIL and to_email):
-        return  # email not configured
-
     msg = EmailMessage()
     msg['Subject'] = f"Client Intake #{sub.id} — Code {sub.code}"
     msg['From'] = FROM_EMAIL
@@ -315,7 +322,7 @@ def send_submission_email(submission_id: int, session: Session):
     msg.set_content("Your email client does not support HTML.")
     msg.add_alternative(html, subtype='html')
 
-    # Attach photos (watch total size with Gmail)
+    # attach photos (be mindful of total size)
     for p in photos:
         try:
             path = os.path.join(os.getcwd(), p.file_path.replace("/", os.sep))
@@ -324,10 +331,23 @@ def send_submission_email(submission_id: int, session: Session):
             maintype, subtype = (p.content_type.split("/", 1) + ["octet-stream"])[:2]
             msg.add_attachment(data, maintype=maintype, subtype=subtype,
                                filename=p.original_name or os.path.basename(path))
-        except Exception:
-            continue
+        except Exception as e:
+            log(f"[MAIL] Could not attach {p.file_path}: {e}")
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.send_message(msg)
+    # config guard
+    if not (SMTP_HOST and SMTP_PORT and SMTP_USER and SMTP_PASS and FROM_EMAIL and to_email):
+        log(f"[MAIL] Skipping send — missing SMTP config or recipient. "
+            f"HOST={SMTP_HOST} USER={SMTP_USER} FROM={FROM_EMAIL} TO={to_email}")
+        return False
+
+    log(f"[MAIL] Connecting to SMTP {SMTP_HOST}:{SMTP_PORT} as {SMTP_USER}; sending to {to_email} for submission {sub.id}…")
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        log(f"[MAIL] ✅ Sent submission {sub.id} to {to_email}")
+        return True
+    except Exception as e:
+        log(f"[MAIL] ❌ Failed to send submission {sub.id} to {to_email}: {type(e).__name__}: {e}")
+        return False

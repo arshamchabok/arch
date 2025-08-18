@@ -14,7 +14,7 @@ import os
 # restart:python -m uvicorn app:app --reload --port 8001
 
 #start your sever1: .\venv\Scripts\activate
-#start your sever2: python -m uvicorn app:app --reload --port 8001
+#start your sever2: python -m uvicorn app:app --reload --port 8001 
 
 
 # ---- Config (change this later) ----
