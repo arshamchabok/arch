@@ -16,6 +16,11 @@ import os
 #start your sever1: .\venv\Scripts\activate
 #start your sever2: python -m uvicorn app:app --reload --port 8001 
 
+#git add .
+#git commit -m "Update"
+#git push
+
+
 
 # ---- Config (change this later) ----
 FOUNDER_KEY = os.environ.get("FOUNDER_KEY", "letmein")  # URL key: ?key=letmein

@@ -7,15 +7,12 @@ from sqlmodel import SQLModel, create_engine, Session, select
 from models import Code, gen_code
 from typing import List
 from dotenv import load_dotenv
-import os, json, shutil, smtplib
+import os, json, shutil, smtplib, sys
 from email.message import EmailMessage
 from email.utils import formatdate
-import sys
 
 def log(msg: str):
-    # goes to Render logs
     print(msg, file=sys.stdout, flush=True)
-
 
 load_dotenv()
 
@@ -82,7 +79,6 @@ templates = Environment(
 
 @app.on_event("startup")
 def startup():
-    # ensure uploads dir exists
     os.makedirs("static/uploads", exist_ok=True)
     SQLModel.metadata.create_all(engine)
 
@@ -107,9 +103,22 @@ def founder_page(request: Request, ok: int | None = None, _: bool = Depends(requ
     return tpl.render(request=request, codes=codes, ok=ok, key=request.query_params.get("key"))
 
 @app.post("/founder/create")
-def founder_create(request: Request, architect_email: str = Form(...), _: bool = Depends(require_founder), session: Session = Depends(get_session)):
-    c = Code(code=gen_code(), architect_email=architect_email)
-    session.add(c); session.commit()
+def founder_create(
+    request: Request,
+    architect_name: str = Form(...),
+    architect_email: str = Form(...),
+    client_name: str = Form(...),
+    _: bool = Depends(require_founder),
+    session: Session = Depends(get_session),
+):
+    c = Code(
+        code=gen_code(),
+        architect_email=architect_email.strip(),
+        architect_name=architect_name.strip(),
+        client_name=client_name.strip(),
+    )
+    session.add(c)
+    session.commit()
     key = request.query_params.get("key")
     return RedirectResponse(url=f"/founder?key={key}&ok=1", status_code=303)
 
@@ -139,13 +148,11 @@ def client_start_submit(
     session: Session = Depends(get_session),
 ):
     from models import Submission
-    # validate code
     c = session.exec(select(Code).where(Code.code == code, Code.is_active == True)).first()
     if not c:
         tpl = templates.get_template("client_start.html")
         return tpl.render(request=request, error="Invalid or inactive code.")
 
-    # save submission
     sub = Submission(
         code=code,
         client_first_name=first_name.strip(),
@@ -196,14 +203,13 @@ async def survey_submit(sub_id: int, request: Request, session: Session = Depend
         emailed = False
         try:
             emailed = send_submission_email(sub.id, session)
-        except Exception as mail_err:
+        except Exception:
             emailed = False
 
         tpl = templates.get_template("survey_thanks.html")
         return tpl.render(request=request, sub=sub, emailed=emailed)
     except Exception as e:
         return HTMLResponse(f"<pre>ERROR: {type(e).__name__}: {e}</pre>", status_code=500)
-
 
 @app.post("/client/{sub_id}/upload", response_class=HTMLResponse)
 async def upload_photos(
@@ -282,7 +288,6 @@ def send_submission_email(submission_id: int, session: Session) -> bool:
         return False
     to_email = code_row.architect_email
 
-    # answers
     answers = {}
     if getattr(sub, "answers_json", None):
         try:
@@ -291,11 +296,13 @@ def send_submission_email(submission_id: int, session: Session) -> bool:
             log(f"[MAIL] answers_json parse error for submission {sub.id}: {e}")
             answers = {}
 
-    # HTML body (show full questions)
+    # HTML body (show full questions + names)
     lines = []
     lines.append(f"<h2>New Client Submission (#{sub.id})</h2>")
     lines.append(f"<p><b>Code:</b> {sub.code}</p>")
-    lines.append(f"<p><b>Client:</b> {sub.client_first_name} {sub.client_last_name} — {sub.client_email}</p>")
+    lines.append(f"<p><b>Architect:</b> {code_row.architect_name} &lt;{code_row.architect_email}&gt;</p>")
+    lines.append(f"<p><b>Client (for this code):</b> {code_row.client_name}</p>")
+    lines.append(f"<p><b>Submitted by:</b> {sub.client_first_name} {sub.client_last_name} — {sub.client_email}</p>")
     lines.append("<hr>")
     lines.append("<h3>Answers</h3>")
     lines.append("<ol>")
@@ -304,7 +311,6 @@ def send_submission_email(submission_id: int, session: Session) -> bool:
         lines.append(f"<li><div style='margin-bottom:8px'><b>{qtext}</b><br>{val}</div></li>")
     lines.append("</ol>")
 
-    # photos list
     photos = session.exec(select(Photo).where(Photo.submission_id == sub.id)).all()
     if photos:
         lines.append("<h3>Photos</h3><ul>")
@@ -322,7 +328,6 @@ def send_submission_email(submission_id: int, session: Session) -> bool:
     msg.set_content("Your email client does not support HTML.")
     msg.add_alternative(html, subtype='html')
 
-    # attach photos (be mindful of total size)
     for p in photos:
         try:
             path = os.path.join(os.getcwd(), p.file_path.replace("/", os.sep))
@@ -334,7 +339,6 @@ def send_submission_email(submission_id: int, session: Session) -> bool:
         except Exception as e:
             log(f"[MAIL] Could not attach {p.file_path}: {e}")
 
-    # config guard
     if not (SMTP_HOST and SMTP_PORT and SMTP_USER and SMTP_PASS and FROM_EMAIL and to_email):
         log(f"[MAIL] Skipping send — missing SMTP config or recipient. "
             f"HOST={SMTP_HOST} USER={SMTP_USER} FROM={FROM_EMAIL} TO={to_email}")
